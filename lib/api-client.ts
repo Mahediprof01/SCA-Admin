@@ -75,6 +75,45 @@ export interface UniversityStats {
   privateType: number;
 }
 
+export interface Review {
+  _id?: string;
+  id?: string;
+  name: string;
+  university: string;
+  quote: string;
+  rating: number;
+  status: 'active' | 'inactive';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ReviewsResponse {
+  data: Review[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface ReviewStats {
+  total: number;
+  active: number;
+  inactive: number;
+  averageRating: number;
+}
+
+export interface SuccessStory {
+  _id?: string;
+  id?: string;
+  type: 'image' | 'video';
+  title?: string;
+  description?: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  status: 'active' | 'inactive';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface ContactsResponse {
   data: Contact[];
   total: number;
@@ -100,7 +139,8 @@ class ApiClient {
 
     this.axiosInstance = axios.create({
       baseURL: this.baseURL,
-      timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '10000'),
+      // Increased timeout to 60 seconds for file uploads to Cloudinary
+      timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '60000'),
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -119,6 +159,12 @@ class ApiClient {
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
+        
+        // For FormData, delete Content-Type header so browser/axios can set multipart/form-data with boundary
+        if (config.data instanceof FormData) {
+          delete config.headers['Content-Type'];
+        }
+        
         return config;
       },
       (error: AxiosError) => {
@@ -286,7 +332,7 @@ class ApiClient {
   }
 
   public async createUniversity(
-    university: Omit<University, '_id' | 'createdAt' | 'updatedAt'>,
+    university: Omit<University, '_id' | 'createdAt' | 'updatedAt'> | FormData,
   ): Promise<University> {
     const response = await this.axiosInstance.post<University>(
       '/universities',
@@ -297,7 +343,7 @@ class ApiClient {
 
   public async updateUniversity(
     id: string,
-    university: Partial<University>,
+    university: Partial<University> | FormData,
   ): Promise<University> {
     const response = await this.axiosInstance.put<University>(
       `/universities/${id}`,
@@ -315,6 +361,83 @@ class ApiClient {
       '/universities/stats/overview',
     );
     return response.data;
+  }
+
+  // Reviews Endpoints
+  public async getReviews(
+    page: number = 1,
+    limit: number = 10,
+    status?: string,
+    search?: string,
+  ): Promise<ReviewsResponse> {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    if (status) params.append('status', status);
+    if (search) params.append('search', search);
+
+    const response = await this.axiosInstance.get<ReviewsResponse>(
+      `/reviews?${params.toString()}`,
+    );
+    return response.data;
+  }
+
+  public async getReviewById(id: string): Promise<Review> {
+    const response = await this.axiosInstance.get<Review>(`/reviews/${id}`);
+    return response.data;
+  }
+
+  public async createReview(
+    review: Omit<Review, '_id' | 'createdAt' | 'updatedAt'>,
+  ): Promise<Review> {
+    const response = await this.axiosInstance.post<Review>('/reviews', review);
+    return response.data;
+  }
+
+  public async updateReview(
+    id: string,
+    review: Partial<Review>,
+  ): Promise<Review> {
+    const response = await this.axiosInstance.put<Review>(
+      `/reviews/${id}`,
+      review,
+    );
+    return response.data;
+  }
+
+  public async deleteReview(id: string): Promise<void> {
+    await this.axiosInstance.delete(`/reviews/${id}`);
+  }
+
+  public async getReviewStats(): Promise<ReviewStats> {
+    const response = await this.axiosInstance.get<ReviewStats>(
+      '/reviews/stats/overview',
+    );
+    return response.data;
+  }
+
+  // ==================== SUCCESS STORIES ====================
+
+  public async getSuccessStories(type?: string, status?: string): Promise<{ data: SuccessStory[]; total: number }> {
+    const params: any = {};
+    if (type) params.type = type;
+    if (status) params.status = status;
+    const response = await this.axiosInstance.get<{ data: SuccessStory[]; total: number }>('/success-stories', { params });
+    return response.data;
+  }
+
+  public async createSuccessStory(data: FormData): Promise<SuccessStory> {
+    const response = await this.axiosInstance.post<SuccessStory>('/success-stories', data);
+    return response.data;
+  }
+
+  public async updateSuccessStory(id: string, data: Partial<SuccessStory>): Promise<SuccessStory> {
+    const response = await this.axiosInstance.put<SuccessStory>(`/success-stories/${id}`, data);
+    return response.data;
+  }
+
+  public async deleteSuccessStory(id: string): Promise<void> {
+    await this.axiosInstance.delete(`/success-stories/${id}`);
   }
 }
 

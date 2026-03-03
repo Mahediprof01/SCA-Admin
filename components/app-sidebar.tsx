@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Building2, Users, LayoutDashboard, LogOut, CalendarCheck } from "lucide-react"
+import { Building2, Users, LayoutDashboard, LogOut, CalendarCheck, Star, Trophy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { logout } from "@/app/actions/auth"
 
@@ -12,6 +12,8 @@ const navigation = [
   { name: "Contacts", href: "/dashboard/contacts", icon: Users },
   { name: "Consultations", href: "/dashboard/consultations", icon: CalendarCheck },
   { name: "Universities", href: "/dashboard/universities", icon: Building2 },
+  { name: "Reviews", href: "/dashboard/reviews", icon: Star },
+  { name: "Success Stories", href: "/dashboard/success-stories", icon: Trophy },
 ]
 
 export function AppSidebar() {

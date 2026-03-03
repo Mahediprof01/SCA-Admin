@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
+import { Loader2, Upload, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { apiClient, type University } from "@/lib/api-client"
 
@@ -29,6 +28,8 @@ export function UniversityForm({ initialData, mode }: UniversityFormProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [saving, setSaving] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>(initialData?.image || "")
   const [formData, setFormData] = useState({
     name: initialData?.name || "",
     description: initialData?.description || "",
@@ -41,7 +42,6 @@ export function UniversityForm({ initialData, mode }: UniversityFormProps) {
     website: initialData?.website || "",
     email: initialData?.email || "",
     phone: initialData?.phone || "",
-    image: initialData?.image || "",
     status: initialData?.status || "active" as "active" | "inactive",
   })
 
@@ -54,10 +54,31 @@ export function UniversityForm({ initialData, mode }: UniversityFormProps) {
     e.preventDefault()
     try {
       setSaving(true)
-      const payload = { ...formData, programs, facilities }
+      const formDataToSend = new FormData()
+
+      // Add all form fields EXCEPT image (image needs special handling)
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key !== "image") {
+          formDataToSend.append(key, String(value))
+        }
+      })
+
+      // Add arrays as JSON strings
+      formDataToSend.append("programs", JSON.stringify(programs))
+      formDataToSend.append("facilities", JSON.stringify(facilities))
+
+      // Handle image: prefer new file upload, fallback to existing URL
+      if (imageFile) {
+        // New file selected - send the file
+        formDataToSend.append("image", imageFile)
+      } else if (imagePreview && !imagePreview.startsWith("data:")) {
+        // Existing image URL (not a base64 preview) - preserve it
+        formDataToSend.append("image", imagePreview)
+      }
+      // If neither file nor valid URL, don't add image field (backend handles this)
 
       if (mode === "create") {
-        await apiClient.createUniversity(payload)
+        await apiClient.createUniversity(formDataToSend as any)
         toast({
           title: "Success",
           description: "University created successfully",
@@ -65,7 +86,7 @@ export function UniversityForm({ initialData, mode }: UniversityFormProps) {
       } else {
         const id = initialData?._id || initialData?.id
         if (id) {
-          await apiClient.updateUniversity(id, payload)
+          await apiClient.updateUniversity(id, formDataToSend as any)
           toast({
             title: "Success",
             description: "University updated successfully",
@@ -105,6 +126,23 @@ export function UniversityForm({ initialData, mode }: UniversityFormProps) {
 
   const removeFacility = (index: number) => {
     setFacilities(facilities.filter((_, i) => i !== index))
+  }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImageFile(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const clearImage = () => {
+    setImageFile(null)
+    setImagePreview(initialData?.image || "")
   }
 
   return (
@@ -280,17 +318,47 @@ export function UniversityForm({ initialData, mode }: UniversityFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="image">Image URL *</Label>
-            <Input
-              id="image"
-              type="url"
-              value={formData.image}
-              onChange={(e) =>
-                setFormData({ ...formData, image: e.target.value })
-              }
-              placeholder="/universities/university-name.jpg"
-              required
-            />
+            <Label htmlFor="image">University Image</Label>
+            <div className="flex gap-4 flex-col md:flex-row">
+              <div className="flex-1">
+                <div className="relative border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors">
+                  <input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    aria-label="Upload university image"
+                  />
+                  <label htmlFor="image" className="cursor-pointer flex flex-col items-center gap-2">
+                    <Upload className="w-8 h-8 text-gray-400" />
+                    <span className="text-sm font-medium text-gray-700">
+                      {imageFile ? imageFile.name : "Click to upload or drag and drop"}
+                    </span>
+                    <span className="text-xs text-gray-500">PNG, JPG up to 10MB</span>
+                  </label>
+                </div>
+              </div>
+
+              {imagePreview && (
+                <div className="flex-1">
+                  <div className="relative w-full aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={clearImage}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">

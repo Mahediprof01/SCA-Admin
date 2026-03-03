@@ -76,6 +76,17 @@ export default function UniversityDetailsPage() {
       {/* Content */}
       <div className="p-6">
         <div className="mx-auto max-w-5xl space-y-6">
+          {/* University Image */}
+          {university.image && (
+            <div className="relative w-full h-64 md:h-80 rounded-lg overflow-hidden bg-muted border border-border">
+              <img
+                src={university.image}
+                alt={university.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
           {/* Status and Key Info */}
           <div className="flex items-center gap-4">
             <Badge
