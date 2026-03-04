@@ -62,6 +62,7 @@ export function ContactsTable() {
     phone: "",
     subject: "",
     message: "",
+    cgpa: "",
     status: "active" as Contact["status"],
   })
 
@@ -186,6 +187,7 @@ export function ContactsTable() {
       phone: contact.phone,
       subject: contact.subject,
       message: contact.message,
+      cgpa: contact.cgpa ?? "",
       status: contact.status,
     })
     setEditContact(contact)
@@ -393,6 +395,12 @@ export function ContactsTable() {
                   {viewContact.message}
                 </p>
               </div>
+              {viewContact.cgpa && (
+                <div className="flex items-center justify-between rounded-lg bg-secondary p-3">
+                  <span className="text-sm text-muted-foreground">CGPA</span>
+                  <span className="text-sm text-foreground">{viewContact.cgpa}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between rounded-lg bg-secondary p-3">
                 <span className="text-sm text-muted-foreground">Status</span>
                 {getStatusBadge(viewContact.status)}
@@ -507,6 +515,18 @@ export function ContactsTable() {
                 placeholder="Contact message"
                 rows={4}
                 className="rounded-md border border-input bg-card px-3 py-2 text-sm resize-none"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="cgpa">CGPA</Label>
+              <Input
+                id="cgpa"
+                value={formData.cgpa}
+                onChange={(e) =>
+                  setFormData({ ...formData, cgpa: e.target.value })
+                }
+                placeholder="e.g. 3.75"
+                className="bg-card"
               />
             </div>
           </div>

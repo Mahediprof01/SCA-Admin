@@ -14,6 +14,7 @@ export interface Contact {
   phone: string;
   subject: string;
   message: string;
+  cgpa?: string;
   status: 'active' | 'inactive' | 'pending';
   createdAt?: string;
   updatedAt?: string;
