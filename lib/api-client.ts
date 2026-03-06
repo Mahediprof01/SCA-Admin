@@ -134,9 +134,32 @@ class ApiClient {
   private axiosInstance: AxiosInstance;
   private baseURL: string;
 
+  private getFallbackBaseURL(baseURL?: string): string | null {
+    const source = baseURL || this.baseURL;
+    if (source.includes('localhost:3002')) {
+      return source.replace('localhost:3002', 'localhost:8000');
+    }
+    if (source.includes('localhost:8000')) {
+      return source.replace('localhost:8000', 'localhost:3002');
+    }
+    return null;
+  }
+
+  private extractListFromResponse<T>(payload: unknown): T[] {
+    if (Array.isArray(payload)) {
+      return payload as T[];
+    }
+    if (payload && typeof payload === 'object') {
+      const typed = payload as any;
+      if (Array.isArray(typed.data)) return typed.data as T[];
+      if (typed.data && Array.isArray(typed.data.data)) return typed.data.data as T[];
+    }
+    return [];
+  }
+
   constructor() {
-    this.baseURL =
-      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const rawApiUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
+    this.baseURL = rawApiUrl || 'http://localhost:3002';
 
     this.axiosInstance = axios.create({
       baseURL: this.baseURL,
@@ -178,7 +201,23 @@ class ApiClient {
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => response,
       (error: AxiosError<ApiError>) => {
-        const errorMessage = error.response?.data?.message || error.message;
+        // Retry once on network failure against local fallback port (3002 <-> 8000).
+        if (!error.response && error.config) {
+          const config = error.config as InternalAxiosRequestConfig & { _retryLocalFallback?: boolean };
+          if (!config._retryLocalFallback) {
+            const fallbackBaseURL = this.getFallbackBaseURL(config.baseURL);
+            if (fallbackBaseURL) {
+              config._retryLocalFallback = true;
+              config.baseURL = fallbackBaseURL;
+              return this.axiosInstance.request(config);
+            }
+          }
+        }
+
+        const rawMessage = error.response?.data?.message || error.message;
+        const errorMessage = Array.isArray(rawMessage)
+          ? rawMessage.join(', ')
+          : rawMessage;
         const statusCode = error.response?.status || 500;
 
         console.error(`API Error [${statusCode}]:`, errorMessage);
@@ -423,8 +462,18 @@ class ApiClient {
     const params: any = {};
     if (type) params.type = type;
     if (status) params.status = status;
-    const response = await this.axiosInstance.get<{ data: SuccessStory[]; total: number }>('/success-stories', { params });
-    return response.data;
+    try {
+      const response = await this.axiosInstance.get('/success-stories', { params });
+      const data = this.extractListFromResponse<SuccessStory>(response.data);
+      return { data, total: data.length };
+    } catch {
+      // Fallback for backends exposing only public route.
+      const response = await this.axiosInstance.get('/success-stories/public');
+      let data = this.extractListFromResponse<SuccessStory>(response.data);
+      if (type) data = data.filter((story) => story.type === type);
+      if (status) data = data.filter((story) => story.status === status);
+      return { data, total: data.length };
+    }
   }
 
   public async createSuccessStory(data: FormData): Promise<SuccessStory> {
