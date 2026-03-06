@@ -41,6 +41,7 @@ function getYouTubeEmbedUrl(url: string): string | null {
 export default function SuccessStoriesPage() {
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const MAX_IMAGE_SIZE_MB = 5
 
   const [images, setImages] = useState<SuccessStory[]>([])
   const [videos, setVideos] = useState<SuccessStory[]>([])
@@ -97,6 +98,15 @@ export default function SuccessStoriesPage() {
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+        toast({
+          title: "Error",
+          description: `Image must be smaller than ${MAX_IMAGE_SIZE_MB}MB`,
+          variant: "destructive",
+        })
+        if (fileInputRef.current) fileInputRef.current.value = ""
+        return
+      }
       setImageFile(file)
       const reader = new FileReader()
       reader.onloadend = () => setImagePreview(reader.result as string)

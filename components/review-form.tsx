@@ -40,13 +40,20 @@ export function ReviewForm({ initialData, mode }: ReviewFormProps) {
     e.preventDefault()
     try {
       setSaving(true)
+      const payload = {
+        ...formData,
+        name: formData.name.trim(),
+        university: formData.university.trim(),
+        quote: formData.quote.trim(),
+        rating: Math.min(5, Math.max(1, Number(formData.rating) || 5)),
+      }
       if (mode === "create") {
-        await apiClient.createReview(formData)
+        await apiClient.createReview(payload)
         toast({ title: "Success", description: "Review created successfully" })
       } else {
         const id = initialData?._id || initialData?.id
         if (id) {
-          await apiClient.updateReview(id, formData)
+          await apiClient.updateReview(id, payload)
           toast({ title: "Success", description: "Review updated successfully" })
         }
       }

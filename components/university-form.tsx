@@ -24,20 +24,35 @@ interface UniversityFormProps {
   mode: "create" | "edit"
 }
 
+interface UniversityFormData {
+  name: string
+  description: string
+  location: string
+  country: string
+  established: number | ""
+  type: "public" | "private"
+  ranking: number | ""
+  tuitionFee: string
+  website: string
+  email: string
+  phone: string
+  status: "active" | "inactive"
+}
+
 export function UniversityForm({ initialData, mode }: UniversityFormProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [saving, setSaving] = useState(false)
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>(initialData?.image || "")
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<UniversityFormData>({
     name: initialData?.name || "",
     description: initialData?.description || "",
     location: initialData?.location || "",
     country: initialData?.country || "",
-    established: initialData?.established || new Date().getFullYear(),
+    established: initialData?.established ?? new Date().getFullYear(),
     type: initialData?.type || "public" as "public" | "private",
-    ranking: initialData?.ranking || 1,
+    ranking: initialData?.ranking ?? 1,
     tuitionFee: initialData?.tuitionFee || "",
     website: initialData?.website || "",
     email: initialData?.email || "",
@@ -49,36 +64,48 @@ export function UniversityForm({ initialData, mode }: UniversityFormProps) {
   const [newProgram, setNewProgram] = useState("")
   const [facilities, setFacilities] = useState<string[]>(initialData?.facilities || [])
   const [newFacility, setNewFacility] = useState("")
+  const MAX_IMAGE_SIZE_MB = 2
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
       setSaving(true)
-      const formDataToSend = new FormData()
-
-      // Add all form fields EXCEPT image (image needs special handling)
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key !== "image") {
-          formDataToSend.append(key, String(value))
-        }
-      })
-
-      // Add arrays as JSON strings
-      formDataToSend.append("programs", JSON.stringify(programs))
-      formDataToSend.append("facilities", JSON.stringify(facilities))
-
-      // Handle image: prefer new file upload, fallback to existing URL
-      if (imageFile) {
-        // New file selected - send the file
-        formDataToSend.append("image", imageFile)
-      } else if (imagePreview && !imagePreview.startsWith("data:")) {
-        // Existing image URL (not a base64 preview) - preserve it
-        formDataToSend.append("image", imagePreview)
+      const established = Number(formData.established)
+      const ranking = Number(formData.ranking)
+      if (!Number.isFinite(established) || !Number.isFinite(ranking)) {
+        toast({
+          title: "Error",
+          description: "Established year and ranking must be valid numbers",
+          variant: "destructive",
+        })
+        return
       }
-      // If neither file nor valid URL, don't add image field (backend handles this)
+
+      const payload = new FormData()
+      payload.append("name", formData.name)
+      payload.append("description", formData.description)
+      payload.append("location", formData.location)
+      payload.append("country", formData.country)
+      payload.append("established", String(established))
+      payload.append("type", formData.type)
+      payload.append("ranking", String(ranking))
+      payload.append("tuitionFee", formData.tuitionFee)
+      payload.append("website", formData.website)
+      payload.append("email", formData.email)
+      payload.append("phone", formData.phone)
+      payload.append("status", formData.status)
+
+      programs.forEach((program) => payload.append("programs", program))
+      facilities.forEach((facility) => payload.append("facilities", facility))
+
+      if (imageFile) {
+        payload.append("image", imageFile)
+      } else if (imagePreview && !imagePreview.startsWith("data:")) {
+        payload.append("image", imagePreview)
+      }
 
       if (mode === "create") {
-        await apiClient.createUniversity(formDataToSend as any)
+        await apiClient.createUniversity(payload)
         toast({
           title: "Success",
           description: "University created successfully",
@@ -86,7 +113,7 @@ export function UniversityForm({ initialData, mode }: UniversityFormProps) {
       } else {
         const id = initialData?._id || initialData?.id
         if (id) {
-          await apiClient.updateUniversity(id, formDataToSend as any)
+          await apiClient.updateUniversity(id, payload)
           toast({
             title: "Success",
             description: "University updated successfully",
@@ -131,6 +158,14 @@ export function UniversityForm({ initialData, mode }: UniversityFormProps) {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      if (file.size > MAX_IMAGE_SIZE_MB * 1024 * 1024) {
+        toast({
+          title: "Error",
+          description: `Image must be smaller than ${MAX_IMAGE_SIZE_MB}MB`,
+          variant: "destructive",
+        })
+        return
+      }
       setImageFile(file)
       const reader = new FileReader()
       reader.onloadend = () => {
@@ -226,7 +261,7 @@ export function UniversityForm({ initialData, mode }: UniversityFormProps) {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    established: parseInt(e.target.value),
+                    established: e.target.value === "" ? "" : Number(e.target.value),
                   })
                 }
                 required
@@ -270,7 +305,7 @@ export function UniversityForm({ initialData, mode }: UniversityFormProps) {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    ranking: parseInt(e.target.value),
+                    ranking: e.target.value === "" ? "" : Number(e.target.value),
                   })
                 }
                 required
