@@ -89,7 +89,7 @@ export function UniversitiesTable() {
     try {
       setDeleting(true)
       await apiClient.deleteUniversity(id)
-      setUniversities((prev) => prev.filter((uni) => (uni._id || uni.id) !== id))
+      setUniversities((prev) => prev.filter((uni) => String(uni.id) !== id))
       toast({
         title: "Success",
         description: "University deleted successfully",
@@ -181,7 +181,7 @@ export function UniversitiesTable() {
               </TableRow>
             ) : (
               filteredUniversities.map((uni) => {
-                const uniId = uni._id || uni.id || ""
+                const uniId = String(uni.id ?? "")
                 return (
                   <TableRow key={uniId}>
                     <TableCell className="font-medium">{uni.name}</TableCell>
@@ -260,8 +260,8 @@ export function UniversitiesTable() {
               variant="destructive"
               disabled={deleting}
               onClick={() => {
-                const id = deleteUniversity?._id || deleteUniversity?.id
-                if (id) handleDelete(id)
+                const id = deleteUniversity?.id
+                if (id) handleDelete(String(id))
               }}
             >
               {deleting ? (

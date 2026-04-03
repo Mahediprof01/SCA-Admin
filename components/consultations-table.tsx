@@ -136,13 +136,13 @@ export function ConsultationsTable() {
     if (!editConsultation) return
     try {
       setUpdating(true)
-      const id = editConsultation._id || editConsultation.id
+      const id = editConsultation.id
       if (!id) throw new Error("Consultation ID not found")
 
-      await apiClient.updateConsultation(id, formData)
+      await apiClient.updateConsultation(String(id), formData)
       setConsultations(
         consultations.map((c) =>
-          c._id === id || c.id === id ? { ...editConsultation, ...formData } : c
+          c.id === id ? { ...editConsultation, ...formData } : c
         )
       )
       setEditConsultation(null)
@@ -167,12 +167,12 @@ export function ConsultationsTable() {
     if (!deleteConsultation) return
     try {
       setDeleting(true)
-      const id = deleteConsultation._id || deleteConsultation.id
+      const id = deleteConsultation.id
       if (!id) throw new Error("Consultation ID not found")
 
-      await apiClient.deleteConsultation(id)
+      await apiClient.deleteConsultation(String(id))
       setConsultations(
-        consultations.filter((c) => c._id !== id && c.id !== id)
+        consultations.filter((c) => c.id !== id)
       )
       setDeleteConsultation(null)
       toast({
@@ -303,7 +303,7 @@ export function ConsultationsTable() {
               </TableRow>
             ) : (
               filteredConsultations.map((item) => (
-                <TableRow key={item._id || item.id} className="border-border">
+                <TableRow key={item.id} className="border-border">
                   <TableCell>
                     <div>
                       <p className="font-medium text-foreground">

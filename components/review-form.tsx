@@ -51,9 +51,9 @@ export function ReviewForm({ initialData, mode }: ReviewFormProps) {
         await apiClient.createReview(payload)
         toast({ title: "Success", description: "Review created successfully" })
       } else {
-        const id = initialData?._id || initialData?.id
+        const id = initialData?.id
         if (id) {
-          await apiClient.updateReview(id, payload)
+          await apiClient.updateReview(String(id), payload)
           toast({ title: "Success", description: "Review updated successfully" })
         }
       }

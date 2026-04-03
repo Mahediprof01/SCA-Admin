@@ -111,9 +111,9 @@ export function UniversityForm({ initialData, mode }: UniversityFormProps) {
           description: "University created successfully",
         })
       } else {
-        const id = initialData?._id || initialData?.id
+        const id = initialData?.id
         if (id) {
-          await apiClient.updateUniversity(id, payload)
+          await apiClient.updateUniversity(String(id), payload)
           toast({
             title: "Success",
             description: "University updated successfully",

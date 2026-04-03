@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState } from "react"
-import { Lock, User } from "lucide-react"
+import { Lock, Mail } from "lucide-react"
 import { login } from "@/app/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,18 +19,18 @@ export function LoginForm() {
       )}
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="username" className="text-sm text-muted-foreground">
-          Username
+        <Label htmlFor="email" className="text-sm text-muted-foreground">
+          Email
         </Label>
         <div className="relative">
-          <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            id="username"
-            name="username"
-            type="text"
-            placeholder="Enter username"
+            id="email"
+            name="email"
+            type="email"
+            placeholder="Enter email"
             required
-            autoComplete="username"
+            autoComplete="email"
             className="h-11 border-border bg-card pl-10 text-foreground placeholder:text-muted-foreground"
           />
         </div>
@@ -62,9 +62,7 @@ export function LoginForm() {
         {isPending ? "Signing in..." : "Sign in"}
       </Button>
 
-      <p className="text-center text-xs text-muted-foreground">
-        Default credentials: admin / admin123
-      </p>
+
     </form>
   )
 }

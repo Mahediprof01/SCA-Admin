@@ -314,7 +314,7 @@ export default function SuccessStoriesPage() {
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {images.map((img) => (
-                    <div key={img._id || img.id} className="relative group rounded-lg overflow-hidden border bg-muted aspect-square">
+                    <div key={img.id} className="relative group rounded-lg overflow-hidden border bg-muted aspect-square">
                       <img
                         src={img.imageUrl}
                         alt={img.title || "Success story"}
@@ -329,7 +329,7 @@ export default function SuccessStoriesPage() {
                           size="sm"
                           variant="destructive"
                           className="h-7 text-xs gap-1"
-                          onClick={() => confirmDelete(img._id || img.id || "")}
+                          onClick={() => confirmDelete(String(img.id ?? ""))}
                         >
                           <Trash2 className="h-3 w-3" /> Delete
                         </Button>
@@ -424,7 +424,7 @@ export default function SuccessStoriesPage() {
               ) : (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {videos.map((vid) => (
-                    <div key={vid._id || vid.id} className="border rounded-lg overflow-hidden bg-card">
+                    <div key={vid.id} className="border rounded-lg overflow-hidden bg-card">
                       <div className="aspect-video bg-muted">
                         {vid.videoUrl && getYouTubeEmbedUrl(vid.videoUrl) ? (
                           <iframe
@@ -450,7 +450,7 @@ export default function SuccessStoriesPage() {
                             size="sm"
                             variant="destructive"
                             className="h-7 text-xs gap-1"
-                            onClick={() => confirmDelete(vid._id || vid.id || "")}
+                            onClick={() => confirmDelete(String(vid.id ?? ""))}
                           >
                             <Trash2 className="h-3 w-3" /> Delete
                           </Button>

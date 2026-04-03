@@ -7,8 +7,7 @@ import axios, {
 
 // Types
 export interface Contact {
-  _id?: string;
-  id?: string;
+  id?: number;
   name: string;
   email: string;
   phone: string;
@@ -21,8 +20,7 @@ export interface Contact {
 }
 
 export interface Consultation {
-  _id?: string;
-  id?: string;
+  id?: number;
   name: string;
   email: string;
   phone: string;
@@ -39,8 +37,7 @@ export interface ConsultationsResponse {
 }
 
 export interface University {
-  _id?: string;
-  id?: string;
+  id?: number;
   name: string;
   description: string;
   location: string;
@@ -77,8 +74,7 @@ export interface UniversityStats {
 }
 
 export interface Review {
-  _id?: string;
-  id?: string;
+  id?: number;
   name: string;
   university: string;
   quote: string;
@@ -103,8 +99,7 @@ export interface ReviewStats {
 }
 
 export interface SuccessStory {
-  _id?: string;
-  id?: string;
+  id?: number;
   type: 'image' | 'video';
   title?: string;
   description?: string;
@@ -269,7 +264,7 @@ class ApiClient {
     return response.data;
   }
 
-  public async createContact(contact: Omit<Contact, '_id' | 'createdAt' | 'updatedAt'>): Promise<Contact> {
+  public async createContact(contact: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>): Promise<Contact> {
     const response = await this.axiosInstance.post<Contact>(
       '/contacts',
       contact,
@@ -372,7 +367,7 @@ class ApiClient {
   }
 
   public async createUniversity(
-    university: Omit<University, '_id' | 'createdAt' | 'updatedAt'> | FormData,
+    university: Omit<University, 'id' | 'createdAt' | 'updatedAt'> | FormData,
   ): Promise<University> {
     const response = await this.axiosInstance.post<University>(
       '/universities',
@@ -428,7 +423,7 @@ class ApiClient {
   }
 
   public async createReview(
-    review: Omit<Review, '_id' | 'createdAt' | 'updatedAt'>,
+    review: Omit<Review, 'id' | 'createdAt' | 'updatedAt'>,
   ): Promise<Review> {
     const response = await this.axiosInstance.post<Review>('/reviews', review);
     return response.data;

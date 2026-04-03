@@ -128,13 +128,13 @@ export function ContactsTable() {
     if (!editContact) return
     try {
       setUpdating(true)
-      const id = editContact._id || editContact.id
+      const id = editContact.id
       if (!id) throw new Error("Contact ID not found")
       
-      await apiClient.updateContact(id, formData)
+      await apiClient.updateContact(String(id), formData)
       setContacts(
         contacts.map((c) =>
-          (c._id === id || c.id === id) ? { ...editContact, ...formData } : c
+          c.id === id ? { ...editContact, ...formData } : c
         )
       )
       setEditContact(null)
@@ -158,11 +158,11 @@ export function ContactsTable() {
     if (!deleteContact) return
     try {
       setDeleting(true)
-      const id = deleteContact._id || deleteContact.id
+      const id = deleteContact.id
       if (!id) throw new Error("Contact ID not found")
       
-      await apiClient.deleteContact(id)
-      setContacts(contacts.filter((c) => (c._id !== id && c.id !== id)))
+      await apiClient.deleteContact(String(id))
+      setContacts(contacts.filter((c) => c.id !== id))
       setDeleteContact(null)
       toast({
         title: "Success",
@@ -291,7 +291,7 @@ export function ContactsTable() {
               </TableRow>
             ) : (
               filteredContacts.map((contact) => (
-                <TableRow key={contact._id || contact.id} className="border-border">
+                <TableRow key={contact.id} className="border-border">
                   <TableCell>
                     <div>
                       <p className="font-medium text-foreground">

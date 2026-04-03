@@ -83,7 +83,7 @@ export function ReviewsTable() {
     try {
       setDeleting(true)
       await apiClient.deleteReview(id)
-      setReviews((prev) => prev.filter((r) => (r._id || r.id) !== id))
+      setReviews((prev) => prev.filter((r) => String(r.id) !== id))
       toast({ title: "Success", description: "Review deleted successfully" })
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Failed to delete review"
@@ -161,7 +161,7 @@ export function ReviewsTable() {
               </TableRow>
             ) : (
               filteredReviews.map((review) => {
-                const reviewId = review._id || review.id || ""
+                const reviewId = String(review.id ?? "")
                 return (
                   <TableRow key={reviewId}>
                     <TableCell className="font-medium">{review.name}</TableCell>
@@ -232,8 +232,8 @@ export function ReviewsTable() {
               variant="destructive"
               disabled={deleting}
               onClick={() => {
-                const id = deleteReview?._id || deleteReview?.id
-                if (id) handleDelete(id)
+                const id = deleteReview?.id
+                if (id) handleDelete(String(id))
               }}
             >
               {deleting ? (

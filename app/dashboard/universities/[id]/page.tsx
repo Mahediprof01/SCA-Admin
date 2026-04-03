@@ -40,7 +40,7 @@ export default function UniversityDetailsPage() {
 
   if (!university) return null
 
-  const uniId = university._id || university.id || ""
+  const uniId = String(university.id ?? "")
 
   return (
     <div className="flex flex-col">
